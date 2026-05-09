@@ -28,6 +28,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/users", userRoutes);
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+  });
+});
 app.get("/{*any}", (req, res) => {
   res.sendFile(path.resolve("public/index.html"));
 });
