@@ -1,6 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { logout } from "../store/slices/authSlice";
+import useAuth from "../hooks/useAuth";
 
 const navItems = [
   {
@@ -82,11 +81,11 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, isCollapsed, onClose }) {
-  const dispatch = useDispatch();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    dispatch(logout());
+    logout();
     navigate("/auth");
   };
 

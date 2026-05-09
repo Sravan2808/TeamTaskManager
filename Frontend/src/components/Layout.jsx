@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import useProjects from "../hooks/useProjects";
+import useTasks from "../hooks/useTasks";
+import useTeam from "../hooks/useTeam";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 export default function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  useProjects({ autoFetch: true });
+  useTasks({ autoFetch: true });
+  useTeam({ autoFetch: true });
 
   return (
     <div className="flex h-screen bg-navy-950 bg-grid overflow-hidden relative">

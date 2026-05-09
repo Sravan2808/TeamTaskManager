@@ -1,18 +1,13 @@
 import { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  addTask,
-  updateTaskStatus,
-  deleteTask,
-} from "../store/slices/taskSlice";
+import { useSelector } from "react-redux";
+import useTasks from "../hooks/useTasks";
 
 export default function Tasks() {
-  const { tasks } = useSelector((state) => state.tasks);
+  const { tasks, filter, setFilter, createTask, updateTaskStatus, deleteTask } =
+    useTasks();
   const { projects } = useSelector((state) => state.projects);
   const { members } = useSelector((state) => state.team);
-  const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
-  const [filter, setFilter] = useState("all");
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -44,14 +39,11 @@ export default function Tasks() {
   const handleCreate = (e) => {
     e.preventDefault();
     if (!form.title) return;
-    dispatch(
-      addTask({
-        id: "task-" + Date.now(),
-        ...form,
-        status: "todo",
-        createdAt: new Date().toISOString().split("T")[0],
-      }),
-    );
+    createTask({
+      ...form,
+      status: "todo",
+      createdAt: new Date().toISOString().split("T")[0],
+    });
     setForm({
       title: "",
       description: "",
@@ -206,12 +198,10 @@ export default function Tasks() {
                   <select
                     value={task.status}
                     onChange={(e) =>
-                      dispatch(
-                        updateTaskStatus({
-                          id: task.id,
-                          status: e.target.value,
-                        }),
-                      )
+                      updateTaskStatus({
+                        id: task.id,
+                        status: e.target.value,
+                      })
                     }
                     className="bg-navy-600 text-xs text-text-primary border border-white/10 rounded-lg px-2 py-1.5 outline-none focus:border-cyan-glow/50 cursor-pointer"
                   >
@@ -224,7 +214,7 @@ export default function Tasks() {
 
                   {/* Delete */}
                   <button
-                    onClick={() => dispatch(deleteTask(task.id))}
+                    onClick={() => deleteTask(task.id)}
                     className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-glow/10 rounded-lg transition-all"
                     title="Delete"
                   >

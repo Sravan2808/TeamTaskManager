@@ -1,69 +1,101 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
-const savedUser = JSON.parse(localStorage.getItem('taskforge_user') || 'null');
-const savedToken = localStorage.getItem('taskforge_token') || null;
+const savedUser = JSON.parse(localStorage.getItem("taskforge_user") || "null");
+const savedToken = localStorage.getItem("taskforge_token") || null;
 
 const initialState = {
   user: savedUser,
   token: savedToken,
-  isAuthenticated: !!savedToken,
+  isAuthenticated: Boolean(savedToken),
   loading: false,
   error: null,
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
-    loginStart(state) {
+    authStart(state) {
       state.loading = true;
       state.error = null;
+    },
+    authFailure(state, action) {
+      state.loading = false;
+      state.error = action.payload;
     },
     loginSuccess(state, action) {
+      const user = action.payload?.user || null;
+      const token = action.payload?.token || null;
       state.loading = false;
-      state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      localStorage.setItem('taskforge_user', JSON.stringify(action.payload.user));
-      localStorage.setItem('taskforge_token', action.payload.token);
-    },
-    loginFailure(state, action) {
-      state.loading = false;
-      state.error = action.payload;
-    },
-    signupStart(state) {
-      state.loading = true;
       state.error = null;
+      state.user = user;
+      state.token = token;
+      state.isAuthenticated = Boolean(token);
+
+      if (user) {
+        localStorage.setItem("taskforge_user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("taskforge_user");
+      }
+
+      if (token) {
+        localStorage.setItem("taskforge_token", token);
+      } else {
+        localStorage.removeItem("taskforge_token");
+      }
     },
-    signupSuccess(state, action) {
-      state.loading = false;
-      state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      localStorage.setItem('taskforge_user', JSON.stringify(action.payload.user));
-      localStorage.setItem('taskforge_token', action.payload.token);
-    },
-    signupFailure(state, action) {
-      state.loading = false;
-      state.error = action.payload;
-    },
-    logout(state) {
+registerSuccess(state, action) {
+
+  const user = action.payload?.user || null;
+  const token = action.payload?.token || null;
+
+  state.loading = false;
+  state.error = null;
+
+  state.user = user;
+  state.token = token;
+
+  state.isAuthenticated = Boolean(token);
+
+  if (user) {
+    localStorage.setItem(
+      "taskforge_user",
+      JSON.stringify(user)
+    );
+  }
+
+  if (token) {
+    localStorage.setItem(
+      "taskforge_token",
+      token
+    );
+  }
+},
+    logoutSuccess(state) {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.loading = false;
       state.error = null;
-      localStorage.removeItem('taskforge_user');
-      localStorage.removeItem('taskforge_token');
+      localStorage.removeItem("taskforge_user");
+      localStorage.removeItem("taskforge_token");
     },
     clearError(state) {
       state.error = null;
+    },
+    setError(state, action) {
+      state.error = action.payload;
     },
   },
 });
 
 export const {
-  loginStart, loginSuccess, loginFailure,
-  signupStart, signupSuccess, signupFailure,
-  logout, clearError,
+  authStart,
+  authFailure,
+  loginSuccess,
+  registerSuccess,
+  logoutSuccess,
+  clearError,
+  setError,
 } = authSlice.actions;
 export default authSlice.reducer;

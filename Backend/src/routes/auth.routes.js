@@ -4,6 +4,9 @@ import {
   registerValidator,
   loginValidator,
 } from "../validators/auth.validator.js";
+import {
+  authenticate,
+} from "../middleware/auth.js";
 
 const authRouter = Router();
 
@@ -28,6 +31,6 @@ authRouter.post("/register", registerValidator, register);
 
 authRouter.post("/login", loginValidator, login);
 
-authRouter.post("/logout", logoutUser);
+authRouter.post("/logout", authenticate, logoutUser);
 
 export default authRouter;

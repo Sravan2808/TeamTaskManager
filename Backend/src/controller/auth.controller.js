@@ -31,7 +31,7 @@ export async function register(req, res) {
       });
     }
 
-    // Create user
+    // Validate role
     if (role && !["admin", "member"].includes(role)) {
       return res.status(400).json({
         success: false,
@@ -39,6 +39,7 @@ export async function register(req, res) {
       });
     }
 
+    // Create user
     const user = await userModel.create({
       username,
       email,
@@ -46,15 +47,41 @@ export async function register(req, res) {
       ...(role ? { role } : {}),
     });
 
+    // Generate token
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // Response
     res.status(201).json({
       success: true,
       message: "User registered successfully",
+      token,
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
+        role: user.role,
       },
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -63,6 +90,7 @@ export async function register(req, res) {
     });
   }
 }
+
 
 /**
  * @route POST /api/auth/login
