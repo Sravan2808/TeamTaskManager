@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { addProject, deleteProject } from "../store/slices/projectSlice";
+import useProjects from "../hooks/useProjects";
+import { useSelector } from "react-redux";
 
 export default function Projects() {
-  const { projects } = useSelector((state) => state.projects);
+  const { projects, createProject, deleteProject } = useProjects();
   const { members } = useSelector((state) => state.team);
-  const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -32,18 +31,11 @@ export default function Projects() {
   const handleCreate = (e) => {
     e.preventDefault();
     if (!form.name) return;
-    dispatch(
-      addProject({
-        id: "proj-" + Date.now(),
-        name: form.name,
-        description: form.description,
-        members: form.members,
-        deadline: form.deadline,
-        progress: 0,
-        taskCount: 0,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      }),
-    );
+    createProject({
+      name: form.name,
+      description: form.description,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
     setForm({ name: "", description: "", deadline: "", members: [] });
     setShowModal(false);
   };
@@ -111,7 +103,7 @@ export default function Projects() {
                 </h3>
               </div>
               <button
-                onClick={() => dispatch(deleteProject(p.id))}
+                onClick={() => deleteProject(p.id)}
                 className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-glow/10 rounded-lg transition-all"
                 title="Delete project"
               >

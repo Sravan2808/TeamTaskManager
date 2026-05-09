@@ -1,62 +1,81 @@
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import {
-  loginStart, loginSuccess, loginFailure,
-  signupStart, signupSuccess, signupFailure,
-  clearError,
-} from '../store/slices/authSlice'
+import { useState } from "react";
+import useAuth from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
-  const dispatch = useDispatch()
-  const { loading, error } = useSelector(state => state.auth)
+  const [isLogin, setIsLogin] = useState(true);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const { loading, error, login, register, clearError, setError } = useAuth();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+  
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    dispatch(clearError())
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (loading) return;
+
+  clearError();
+
+  try {
 
     if (isLogin) {
-      dispatch(loginStart())
-      // Simulate API call
-      setTimeout(() => {
-        if (form.email && form.password) {
-          dispatch(loginSuccess({
-            user: { id: 'user-1', name: 'Alex Morgan', email: form.email },
-            token: 'jwt-demo-token-' + Date.now(),
-          }))
-        } else {
-          dispatch(loginFailure('Please fill in all fields'))
-        }
-      }, 800)
-    } else {
-      if (form.password !== form.confirmPassword) {
-        dispatch(signupFailure('Passwords do not match'))
-        return
+
+      if (!form.email || !form.password) {
+        setError("Please fill in all fields");
+        return;
       }
-      dispatch(signupStart())
-      setTimeout(() => {
-        if (form.name && form.email && form.password) {
-          dispatch(signupSuccess({
-            user: { id: 'user-new', name: form.name, email: form.email },
-            token: 'jwt-demo-token-' + Date.now(),
-          }))
-        } else {
-          dispatch(signupFailure('Please fill in all fields'))
-        }
-      }, 800)
+
+      const result = await login({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (result?.ok) {
+        navigate("/dashboard");
+      }
+
+    } else {
+
+      if (form.password !== form.confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+
+      if (!form.name || !form.email || !form.password) {
+        setError("Please fill in all fields");
+        return;
+      }
+
+      const result = await register({
+        username: form.name,
+        email: form.email,
+        password: form.password,
+      });
+
+      if (result?.ok) {
+        navigate("/dashboard");
+      }
     }
+
+  } catch (error) {
+    console.log(error);
   }
+};
 
   const toggle = () => {
-    setIsLogin(!isLogin)
-    dispatch(clearError())
-    setForm({ name: '', email: '', password: '', confirmPassword: '' })
-  }
+    setIsLogin(!isLogin);
+    clearError();
+    setForm({ name: "", email: "", password: "", confirmPassword: "" });
+  };
 
   return (
     <div className="min-h-screen bg-navy-950 bg-grid flex items-center justify-center p-4 relative overflow-hidden">
@@ -69,14 +88,20 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-glow to-cyan-glow/60 flex items-center justify-center glow-cyan-strong">
-            <svg className="w-9 h-9 text-navy-950" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-9 h-9 text-navy-950"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
             Task<span className="text-cyan-glow text-glow-cyan">Forge</span>
           </h1>
-          <p className="text-text-muted text-sm mt-1">Command your team's productivity</p>
+          <p className="text-text-muted text-sm mt-1">
+            Command your team's productivity
+          </p>
         </div>
 
         {/* Auth Card */}
@@ -84,16 +109,22 @@ export default function AuthPage() {
           {/* Toggle */}
           <div className="flex bg-navy-950/50 rounded-xl p-1 mb-6">
             <button
-              onClick={() => { setIsLogin(true); dispatch(clearError()) }}
+              onClick={() => {
+                setIsLogin(true);
+                clearError();
+              }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300
-                ${isLogin ? 'bg-cyan-glow text-navy-950 glow-cyan' : 'text-text-muted hover:text-white'}`}
+                ${isLogin ? "bg-cyan-glow text-navy-950 glow-cyan" : "text-text-muted hover:text-white"}`}
             >
               Sign In
             </button>
             <button
-              onClick={() => { setIsLogin(false); dispatch(clearError()) }}
+              onClick={() => {
+                setIsLogin(false);
+                clearError();
+              }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300
-                ${!isLogin ? 'bg-cyan-glow text-navy-950 glow-cyan' : 'text-text-muted hover:text-white'}`}
+                ${!isLogin ? "bg-cyan-glow text-navy-950 glow-cyan" : "text-text-muted hover:text-white"}`}
             >
               Sign Up
             </button>
@@ -110,7 +141,9 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="animate-fade-in">
-                <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Full Name</label>
+                <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -124,7 +157,9 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Email</label>
+              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                Email
+              </label>
               <input
                 type="email"
                 name="email"
@@ -137,7 +172,9 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Password</label>
+              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"
@@ -151,7 +188,9 @@ export default function AuthPage() {
 
             {!isLogin && (
               <div className="animate-fade-in">
-                <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Confirm Password</label>
+                <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                  Confirm Password
+                </label>
                 <input
                   type="password"
                   name="confirmPassword"
@@ -166,7 +205,10 @@ export default function AuthPage() {
 
             {isLogin && (
               <div className="text-right">
-                <button type="button" className="text-xs text-cyan-glow hover:text-cyan-light transition-colors">
+                <button
+                  type="button"
+                  className="text-xs text-cyan-glow hover:text-cyan-light transition-colors"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -179,42 +221,81 @@ export default function AuthPage() {
               id="auth-submit"
             >
               {loading ? (
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <svg
+                  className="w-5 h-5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
               ) : null}
-              {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}
+              {loading
+                ? "Processing..."
+                : isLogin
+                  ? "Sign In"
+                  : "Create Account"}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-text-muted uppercase tracking-wider">or</span>
+            <span className="text-xs text-text-muted uppercase tracking-wider">
+              or
+            </span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
           {/* Social Login */}
-          <button className="btn-secondary w-full flex items-center justify-center gap-3" id="auth-google">
+          {/* <button
+            className="btn-secondary w-full flex items-center justify-center gap-3"
+            id="auth-google"
+          >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
             </svg>
             Continue with Google
-          </button>
+          </button> */}
 
           {/* Toggle link */}
           <p className="text-center text-sm text-text-muted mt-6">
-            {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            <button onClick={toggle} className="text-cyan-glow hover:text-cyan-light font-medium transition-colors">
-              {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={toggle}
+              className="text-cyan-glow hover:text-cyan-light font-medium transition-colors"
+            >
+              {isLogin ? "Sign Up" : "Sign In"}
             </button>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

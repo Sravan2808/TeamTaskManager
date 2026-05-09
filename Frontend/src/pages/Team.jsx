@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { addMember, removeMember } from "../store/slices/teamSlice";
+import { useSelector } from "react-redux";
+import useTeam from "../hooks/useTeam";
 
 export default function Team() {
-  const { members } = useSelector((state) => state.team);
+  const { members, addMember, removeMember } = useTeam();
   const { tasks } = useSelector((state) => state.tasks);
-  const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "" });
 
@@ -35,16 +34,14 @@ export default function Team() {
       .map((n) => n[0])
       .join("")
       .toUpperCase();
-    dispatch(
-      addMember({
-        id: "user-" + Date.now(),
-        name: form.name,
-        email: form.email,
-        role: form.role || "Member",
-        avatar: initials,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      }),
-    );
+    addMember({
+      id: "user-" + Date.now(),
+      name: form.name,
+      email: form.email,
+      role: form.role || "Member",
+      avatar: initials,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
     setForm({ name: "", email: "", role: "" });
     setShowModal(false);
   };
@@ -115,7 +112,7 @@ export default function Team() {
                   </div>
                 </div>
                 <button
-                  onClick={() => dispatch(removeMember(m.id))}
+                  onClick={() => removeMember(m.id)}
                   className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-glow/10 rounded-lg transition-all"
                   title="Remove member"
                 >

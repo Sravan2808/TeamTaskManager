@@ -1,65 +1,73 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  projects: [
-    {
-      id: 'proj-1',
-      name: 'Website Redesign',
-      description: 'Complete overhaul of the company website with modern UI',
-      members: ['user-1', 'user-2', 'user-3'],
-      deadline: '2026-06-15',
-      progress: 65,
-      taskCount: 24,
-      color: '#00D4FF',
-    },
-    {
-      id: 'proj-2',
-      name: 'Mobile App v2',
-      description: 'React Native mobile application second major release',
-      members: ['user-1', 'user-4'],
-      deadline: '2026-07-01',
-      progress: 30,
-      taskCount: 18,
-      color: '#7B61FF',
-    },
-    {
-      id: 'proj-3',
-      name: 'API Migration',
-      description: 'Migrate legacy REST APIs to GraphQL architecture',
-      members: ['user-2', 'user-3', 'user-4', 'user-5'],
-      deadline: '2026-05-30',
-      progress: 85,
-      taskCount: 12,
-      color: '#00FF88',
-    },
-  ],
+  projects: [],
   currentProject: null,
   loading: false,
   error: null,
+  loaded: false,
 };
 
+const defaultColors = ["#00D4FF", "#7B61FF", "#00FF88", "#FFB800", "#FF4757"];
+
+function normalizeProject(project, index = 0) {
+  return {
+    id: project.id || project._id,
+    name: project.name || "Untitled Project",
+    description: project.description || "",
+    members: Array.isArray(project.members) ? project.members : [],
+    deadline: project.deadline || null,
+    progress: Number.isFinite(project.progress) ? project.progress : 0,
+    taskCount: Number.isFinite(project.taskCount) ? project.taskCount : 0,
+    color: project.color || defaultColors[index % defaultColors.length],
+  };
+}
+
 const projectSlice = createSlice({
-  name: 'projects',
+  name: "projects",
   initialState,
   reducers: {
+    setLoading(state, action) {
+      state.loading = action.payload;
+    },
+    setLoaded(state, action) {
+      state.loaded = action.payload;
+    },
+    setError(state, action) {
+      state.error = action.payload;
+    },
     setProjects(state, action) {
-      state.projects = action.payload;
+      state.projects = action.payload.map((project, index) =>
+        normalizeProject(project, index),
+      );
     },
     addProject(state, action) {
-      state.projects.push(action.payload);
+      const normalized = normalizeProject(
+        action.payload,
+        state.projects.length,
+      );
+      state.projects.unshift(normalized);
     },
-    updateProject(state, action) {
-      const idx = state.projects.findIndex(p => p.id === action.payload.id);
-      if (idx !== -1) state.projects[idx] = { ...state.projects[idx], ...action.payload };
-    },
-    deleteProject(state, action) {
-      state.projects = state.projects.filter(p => p.id !== action.payload);
+    removeProject(state, action) {
+      state.projects = state.projects.filter((p) => p.id !== action.payload);
     },
     setCurrentProject(state, action) {
       state.currentProject = action.payload;
     },
+    clearProjectError(state) {
+      state.error = null;
+    },
   },
 });
 
-export const { setProjects, addProject, updateProject, deleteProject, setCurrentProject } = projectSlice.actions;
+export const {
+  setLoading,
+  setLoaded,
+  setError,
+  setProjects,
+  addProject,
+  removeProject,
+  clearProjectError,
+  setCurrentProject,
+} = projectSlice.actions;
 export default projectSlice.reducer;
